@@ -1,10 +1,48 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Iftar Countdown Hamburg</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#0b1220; color:#fff; }
+    .card{
+      min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:24px;
+    }
+    h1{ margin:0 0 10px; font-size:36px; }
+    .sub{ opacity:.85; margin-bottom:24px; }
+    .grid{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+    .unit{
+      width:90px; padding:14px 10px; border:1px solid rgba(255,255,255,.2);
+      border-radius:14px; background:rgba(255,255,255,.06);
+    }
+    .val{ font-size:34px; font-weight:700; display:block; }
+    .label{ font-size:12px; opacity:.8; }
+    #nextIftarText{ margin-top:18px; opacity:.9; font-size:14px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>Iftar Countdown</h1>
+    <div class="sub">Hamburg (IGMG)</div>
+
+    <div class="grid">
+      <div class="unit"><span class="val" id="d">00</span><span class="label">Tage</span></div>
+      <div class="unit"><span class="val" id="h">00</span><span class="label">Std</span></div>
+      <div class="unit"><span class="val" id="m">00</span><span class="label">Min</span></div>
+      <div class="unit"><span class="val" id="s">00</span><span class="label">Sek</span></div>
+    </div>
+
+    <div id="nextIftarText"></div>
+  </div>
+
 <script>
-  // IGMG Hamburg (DE) ve Çevresi – Ramadan 1447 | 2026 (Iftar/Akşam)
-  // Quelle: IGMG PDF stadt=20083
-  // TZ: Europe/Berlin (Hamburg)
+  // IGMG Hamburg (DE) und Çevresi – Ramadan 1447 | 2026 (Iftar/Akşam)
+  // Quelle: https://imsakiye.igmg.org/... stadt=20083
   const TZ = "Europe/Berlin";
 
-  // Format: "YYYY-MM-DDTHH:MM:SS"
   const IFTAR_TIMES = [
     "2026-02-19T17:44:00",
     "2026-02-20T17:46:00",
@@ -37,19 +75,13 @@
     "2026-03-19T18:37:00"
   ];
 
-  // Optional: Elemente, wenn du es anzeigen willst (sonst einfach weglassen)
-  // <div id="nextIftarText"></div>
-  // <audio id="ezan" src="ezan.mp3" preload="auto"></audio>
-  let lastTriggeredTarget = null;
-
   function nowInTZms(timeZone) {
     const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone,
-      year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-      hour12: false
+      year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", second:"2-digit",
+      hour12:false
     }).formatToParts(new Date());
-
     const get = (t) => parts.find(p => p.type === t).value;
     const iso = `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
     return new Date(iso).getTime();
@@ -63,21 +95,17 @@
     return null;
   }
 
-  function formatTargetForHamburg(targetMs) {
-    const d = new Date(targetMs);
+  function formatTarget(targetMs) {
     return new Intl.DateTimeFormat("de-DE", {
       timeZone: TZ,
-      weekday: "short",
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false
-    }).format(d);
+      weekday:"short",
+      day:"2-digit", month:"2-digit", year:"numeric",
+      hour:"2-digit", minute:"2-digit",
+      hour12:false
+    }).format(new Date(targetMs));
   }
 
-  function updateCountdown() {
+  function update() {
     const nowMs = nowInTZms(TZ);
     const targetMs = findNextTarget(nowMs);
 
@@ -89,31 +117,23 @@
 
     const diff = targetMs - nowMs;
 
-    // Optional Anzeige des nächsten Iftar-Termins
-    const elNext = document.getElementById("nextIftarText");
-    if (elNext) elNext.textContent = "Nächster Iftar: " + formatTargetForHamburg(targetMs);
+    const nextEl = document.getElementById("nextIftarText");
+    if (nextEl) nextEl.textContent = "Nächster Iftar: " + formatTarget(targetMs);
 
-    if (diff <= 0) {
-      // (Optional) Ezan/Audio triggern – Achtung: Autoplay kann je nach Browser blockiert sein
-      // if (lastTriggeredTarget !== targetMs) {
-      //   lastTriggeredTarget = targetMs;
-      //   const audio = document.getElementById("ezan");
-      //   if (audio) audio.play().catch(()=>{});
-      // }
-      return;
-    }
-
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff / (1000*60*60)) % 24);
+    const m = Math.floor((diff / (1000*60)) % 60);
     const s = Math.floor((diff / 1000) % 60);
 
-    document.getElementById("d").innerText = d;
-    document.getElementById("h").innerText = String(h).padStart(2, "0");
-    document.getElementById("m").innerText = String(m).padStart(2, "0");
-    document.getElementById("s").innerText = String(s).padStart(2, "0");
+    document.getElementById("d").textContent = d;
+    document.getElementById("h").textContent = String(h).padStart(2,"0");
+    document.getElementById("m").textContent = String(m).padStart(2,"0");
+    document.getElementById("s").textContent = String(s).padStart(2,"0");
   }
 
-  setInterval(updateCountdown, 1000);
-  updateCountdown();
+  setInterval(update, 1000);
+  update();
 </script>
+
+</body>
+</html>
