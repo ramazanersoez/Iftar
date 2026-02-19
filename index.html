@@ -4,76 +4,271 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Iftar Countdown Hamburg</title>
+
+  <!-- Stabil für Werbetafel: Reload alle 6h -->
+  <meta http-equiv="refresh" content="21600">
+
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#0b1220; color:#fff; }
+    :root{
+      --gold1:#f6d78b;
+      --gold2:#caa24a;
+      --ink:rgba(0,0,0,.55);
+      --glass:rgba(255,255,255,.08);
+      --border:rgba(246,215,139,.22);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      color:#fff;
+      background:#000;
+    }
+
+    /* A = contain: kein Zoom, ganzes Bild sichtbar */
+    .bg{
+      min-height:100vh;
+      background:
+        radial-gradient(900px 500px at 18% 12%, rgba(246,215,139,.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(202,162,74,.16), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,.38), rgba(0,0,0,.70)),
+        url("assets/bg.JPG") center/contain no-repeat;
+      background-color:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+
+    .wrap{
+      width:min(1050px, 100%);
+      display:grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap:16px;
+    }
+
     .card{
-      min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:24px;
+      background:var(--ink);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
     }
-    h1{ margin:0 0 10px; font-size:36px; }
-    .sub{ opacity:.85; margin-bottom:24px; }
-    .grid{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+
+    .title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+
+    h1{
+      margin:0;
+      font-size:34px;
+      font-weight:850;
+      letter-spacing:.4px;
+      background: linear-gradient(90deg, var(--gold1), var(--gold2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+    }
+
+    .loc{
+      font-size:13px;
+      opacity:.92;
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background: rgba(255,255,255,.05);
+      white-space:nowrap;
+    }
+
+    .sub{
+      margin-top:4px;
+      margin-bottom:12px;
+      font-size:14px;
+      opacity:.9;
+    }
+
+    .grid{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
     .unit{
-      width:90px; padding:14px 10px; border:1px solid rgba(255,255,255,.2);
-      border-radius:14px; background:rgba(255,255,255,.06);
+      width:110px;
+      padding:12px 10px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: var(--glass);
     }
-    .val{ font-size:34px; font-weight:700; display:block; }
-    .label{ font-size:12px; opacity:.8; }
-    #nextIftarText{ margin-top:18px; opacity:.9; font-size:14px; }
+
+    .val{
+      font-size:42px;
+      font-weight:900;
+      line-height:1;
+      display:block;
+      letter-spacing:.5px;
+      text-shadow: 0 0 18px rgba(246,215,139,.12);
+    }
+
+    .label{
+      font-size:12px;
+      opacity:.85;
+    }
+
+    .next{
+      margin-top:10px;
+      font-size:15px;
+      opacity:.95;
+    }
+
+    .quoteHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+    }
+
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 12px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background: rgba(255,255,255,.06);
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:13px;
+    }
+
+    .quoteType{ font-size:12px; opacity:.85; }
+
+    .quoteText{
+      font-size:18px;
+      line-height:1.38;
+      margin:10px 0 0;
+      white-space:pre-wrap;
+    }
+
+    .quoteRef{
+      margin-top:10px;
+      font-size:13px;
+      opacity:.78;
+    }
+
+    .foot{
+      margin-top:10px;
+      opacity:.65;
+      font-size:12px;
+    }
+
+    @media (max-width: 900px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="bg">
+    <div class="wrap">
 
-  <div class="card">
-    <h1>Iftar Countdown</h1>
-    <div class="sub">Hamburg (IGMG)</div>
+      <!-- Countdown -->
+      <div class="card">
+        <div class="title">
+          <h1>Iftar Countdown</h1>
+          <div class="loc">Hamburg (IGMG)</div>
+        </div>
 
-    <div class="grid">
-      <div class="unit"><span class="val" id="d">00</span><span class="label">Tage</span></div>
-      <div class="unit"><span class="val" id="h">00</span><span class="label">Std</span></div>
-      <div class="unit"><span class="val" id="m">00</span><span class="label">Min</span></div>
-      <div class="unit"><span class="val" id="s">00</span><span class="label">Sek</span></div>
+        <div class="sub">Ramadan 1447 · Nächster Iftar Countdown</div>
+
+        <div class="grid">
+          <div class="unit"><span class="val" id="d">00</span><span class="label">Tage</span></div>
+          <div class="unit"><span class="val" id="h">00</span><span class="label">Std</span></div>
+          <div class="unit"><span class="val" id="m">00</span><span class="label">Min</span></div>
+          <div class="unit"><span class="val" id="s">00</span><span class="label">Sek</span></div>
+        </div>
+
+        <div class="next" id="nextIftarText"></div>
+        <div class="foot">Audio: Fully Kiosk → „Media playback requires user gesture“ = OFF</div>
+      </div>
+
+      <!-- Dua / Hadith / Reminder -->
+      <div class="card">
+        <div class="quoteHead">
+          <div class="badge">
+            <span id="quoteIcon">🤲</span>
+            <span id="quoteTitle">Bitgebet</span>
+          </div>
+          <div class="quoteType" id="quoteCounter">1 / 30</div>
+        </div>
+
+        <div class="quoteText" id="quoteText"></div>
+        <div class="quoteRef" id="quoteRef"></div>
+      </div>
+
     </div>
-
-    <div id="nextIftarText"></div>
   </div>
 
+  <!-- Audio-Datei: assets/ezan.mp3 -->
+  <audio id="ezan" src="assets/ezan.mp3" preload="auto"></audio>
+
 <script>
-  // IGMG Hamburg (DE) und Çevresi – Ramadan 1447 | 2026 (Iftar/Akşam)
-  // Quelle: https://imsakiye.igmg.org/... stadt=20083
   const TZ = "Europe/Berlin";
 
+  // IGMG Hamburg (DE) und Çevresi – Ramadan 1447 | 2026 (Iftar/Akşam)
   const IFTAR_TIMES = [
-    "2026-02-19T17:44:00",
-    "2026-02-20T17:46:00",
-    "2026-02-21T17:48:00",
-    "2026-02-22T17:50:00",
-    "2026-02-23T17:51:00",
-    "2026-02-24T17:53:00",
-    "2026-02-25T17:55:00",
-    "2026-02-26T17:57:00",
-    "2026-02-27T17:59:00",
-    "2026-02-28T18:01:00",
-    "2026-03-01T18:03:00",
-    "2026-03-02T18:05:00",
-    "2026-03-03T18:07:00",
-    "2026-03-04T18:09:00",
-    "2026-03-05T18:11:00",
-    "2026-03-06T18:13:00",
-    "2026-03-07T18:15:00",
-    "2026-03-08T18:16:00",
-    "2026-03-09T18:18:00",
-    "2026-03-10T18:20:00",
-    "2026-03-11T18:22:00",
-    "2026-03-12T18:24:00",
-    "2026-03-13T18:26:00",
-    "2026-03-14T18:28:00",
-    "2026-03-15T18:30:00",
-    "2026-03-16T18:31:00",
-    "2026-03-17T18:33:00",
-    "2026-03-18T18:35:00",
+    "2026-02-19T17:44:00","2026-02-20T17:46:00","2026-02-21T17:48:00","2026-02-22T17:50:00",
+    "2026-02-23T17:51:00","2026-02-24T17:53:00","2026-02-25T17:55:00","2026-02-26T17:57:00",
+    "2026-02-27T17:59:00","2026-02-28T18:01:00","2026-03-01T18:03:00","2026-03-02T18:05:00",
+    "2026-03-03T18:07:00","2026-03-04T18:09:00","2026-03-05T18:11:00","2026-03-06T18:13:00",
+    "2026-03-07T18:15:00","2026-03-08T18:16:00","2026-03-09T18:18:00","2026-03-10T18:20:00",
+    "2026-03-11T18:22:00","2026-03-12T18:24:00","2026-03-13T18:26:00","2026-03-14T18:28:00",
+    "2026-03-15T18:30:00","2026-03-16T18:31:00","2026-03-17T18:33:00","2026-03-18T18:35:00",
     "2026-03-19T18:37:00"
   ];
+
+  // 30 ruhige Inhalte (kurz, öffentlichkeitstauglich)
+  const ROTATING = [
+    {icon:"🤲", title:"Bitgebet", text:"Allāhumma innī laka ṣumtu wa ʿalā rizqika aftartu.", ref:"„Für Dich habe ich gefastet – mit Deiner Versorgung breche ich das Fasten.“"},
+    {icon:"🤲", title:"Bitgebet", text:"Rabbanā ātinā fid-dunyā ḥasanah wa fil-ākhirati ḥasanah.", ref:"„Unser Herr, gib uns Gutes im Diesseits und im Jenseits.“"},
+    {icon:"🤲", title:"Bitgebet", text:"Allāhumma innaka ʿafuwwun tuḥibbul-ʿafwa faʿfu ʿannā.", ref:"„Du liebst Vergebung – vergib uns.“"},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, nimm unser Fasten und unsere Gebete an.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, segne unser Iftar und unsere Familien.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, schenke uns Gesundheit, Geduld und Standhaftigkeit.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, fülle unsere Herzen mit Licht und Ruhe.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, erleichtere allen Bedürftigen ihre Lage.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, schenke uns aufrichtige Dankbarkeit.", ref:""},
+    {icon:"🤲", title:"Bitgebet", text:"O Allah, mache unser Ende gut.", ref:""},
+
+    {icon:"📜", title:"Hadith", text:"Das Fasten ist ein Schutzschild.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Die Taten werden nach den Absichten beurteilt.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Ein gutes Wort ist Wohltat.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Barmherzigkeit wird denen erwiesen, die barmherzig sind.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Gutes Tun bringt Segen.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Geduld ist Licht.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Dankbarkeit vermehrt die Gaben.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Vergebung suchen bringt Ruhe ins Herz.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Sanftmut verschönert jede Sache.", ref:""},
+    {icon:"📜", title:"Hadith", text:"Ein Lächeln ist Wohltat.", ref:""},
+
+    {icon:"✨", title:"Ramadan", text:"Ramadan ist Zeit für Ruhe, Fokus und Herzreinigung.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Die Minuten vor Iftar: Dankbarkeit, Dua, leiser Moment.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Ein kleines Dua kann Großes verändern.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Teile Iftar – teile Segen.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Heute: weniger Eile, mehr Bewusstsein.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Gutes Verhalten ist eine starke Form von Gottesdienst.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Bewahre Ruhe – Ramadan ist ein Trainingsmonat.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Fülle deinen Tag mit guten Absichten.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Vergebung suchen. Frieden im Herzen halten.", ref:""},
+    {icon:"✨", title:"Ramadan", text:"Möge dein Iftar gesegnet sein.", ref:""}
+  ];
+
+  let playedForTarget = null;
 
   function nowInTZms(timeZone) {
     const parts = new Intl.DateTimeFormat("en-GB", {
@@ -105,20 +300,30 @@
     }).format(new Date(targetMs));
   }
 
-  function update() {
+  function updateCountdown() {
     const nowMs = nowInTZms(TZ);
     const targetMs = findNextTarget(nowMs);
 
     if (!targetMs) {
-      document.querySelector(".card").innerHTML =
-        "<h1>Ramazan Mübarek!</h1><p>Keine weiteren Iftar-Zeiten in der Liste.</p>";
+      document.getElementById("nextIftarText").textContent = "Keine weiteren Iftar-Zeiten in der Liste.";
       return;
     }
 
     const diff = targetMs - nowMs;
+    document.getElementById("nextIftarText").textContent = "Nächster Iftar: " + formatTarget(targetMs);
 
-    const nextEl = document.getElementById("nextIftarText");
-    if (nextEl) nextEl.textContent = "Nächster Iftar: " + formatTarget(targetMs);
+    // Iftar erreicht -> Ezan einmalig
+    if (diff <= 0) {
+      if (playedForTarget !== targetMs) {
+        playedForTarget = targetMs;
+        const audio = document.getElementById("ezan");
+        if (audio) {
+          audio.currentTime = 0;
+          audio.play().catch(()=>{});
+        }
+      }
+      return;
+    }
 
     const d = Math.floor(diff / (1000*60*60*24));
     const h = Math.floor((diff / (1000*60*60)) % 24);
@@ -131,8 +336,24 @@
     document.getElementById("s").textContent = String(s).padStart(2,"0");
   }
 
-  setInterval(update, 1000);
-  update();
+  // Quote Rotation (ruhig: 60s)
+  let qIndex = 0;
+  function renderQuote() {
+    const q = ROTATING[qIndex % ROTATING.length];
+    document.getElementById("quoteIcon").textContent = q.icon;
+    document.getElementById("quoteTitle").textContent = q.title;
+    document.getElementById("quoteText").textContent = q.text;
+    document.getElementById("quoteRef").textContent = q.ref || "";
+    document.getElementById("quoteCounter").textContent =
+      `${(qIndex % ROTATING.length) + 1} / ${ROTATING.length}`;
+    qIndex++;
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  renderQuote();
+  setInterval(renderQuote, 60000);
 </script>
 
 </body>
