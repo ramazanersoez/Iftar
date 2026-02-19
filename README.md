@@ -1,2 +1,0 @@
-# Iftar
-Countdown iftartime
