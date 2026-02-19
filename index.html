@@ -14,8 +14,14 @@
   --glass:rgba(255,255,255,.08);
   --border:rgba(246,215,139,.22);
 }
+
 *{box-sizing:border-box;}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#fff;background:#000;}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  color:#fff;
+  background:#000;
+}
 
 /* Mehr Bild – ruhig */
 .bg{
@@ -39,7 +45,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;colo
 .wrap{
   width:min(1050px,100%);
   display:grid;
-  grid-template-columns:1fr;
+  grid-template-columns: 1.08fr .92fr;
   gap:16px;
 }
 
@@ -136,12 +142,44 @@ h1{
 
 .label{font-size:12px;opacity:.85;}
 .next{margin-top:10px;font-size:15px;opacity:.95;}
+
+/* Bitgebet-Box */
+.quoteHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.badge{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background: rgba(255,255,255,.06);
+  font-weight:800;
+  letter-spacing:.2px;
+  font-size:13px;
+}
+
+.quoteType{ font-size:12px; opacity:.85; }
+.quoteText{ font-size:18px; line-height:1.38; margin:10px 0 0; white-space:pre-wrap; }
+.quoteRef{ margin-top:10px; font-size:13px; opacity:.78; }
+
+@media (max-width: 900px){
+  .wrap{ grid-template-columns:1fr; }
+}
 </style>
 </head>
 
 <body>
 <div class="bg">
   <div class="wrap">
+
+    <!-- Countdown -->
     <div class="card">
       <div class="title">
         <h1>Iftar Countdown</h1>
@@ -160,6 +198,21 @@ h1{
 
       <div class="next" id="nextIftarText"></div>
     </div>
+
+    <!-- Bitgebete / Reminder -->
+    <div class="card">
+      <div class="quoteHead">
+        <div class="badge">
+          <span id="quoteIcon">🤲</span>
+          <span id="quoteTitle">Bitgebet</span>
+        </div>
+        <div class="quoteType" id="quoteCounter">1 / 24</div>
+      </div>
+
+      <div class="quoteText" id="quoteText"></div>
+      <div class="quoteRef" id="quoteRef"></div>
+    </div>
+
   </div>
 </div>
 
@@ -169,9 +222,11 @@ h1{
 
 <script>
 const TZ="Europe/Berlin";
-const BG_VOL = 0.20; // Hintergrundlautstärke (0..1)
 
-// IGMG Hamburg – Ramadan 1447 | 2026 (Iftar/Akşam)
+/* Lautstärken */
+const BG_VOL = 0.20;   // Kuran Hintergrund (0..1)
+const EZAN_VOL = 1.00; // Ezan LAUTER (max)
+
 const IFTAR_TIMES=[
 "2026-02-19T17:44:00","2026-02-20T17:46:00","2026-02-21T17:48:00","2026-02-22T17:50:00",
 "2026-02-23T17:51:00","2026-02-24T17:53:00","2026-02-25T17:55:00","2026-02-26T17:57:00",
@@ -183,17 +238,47 @@ const IFTAR_TIMES=[
 "2026-03-19T18:37:00"
 ];
 
+/* Bitgebete / ruhige Ramadan-Texte (Rotation) */
+const ROTATING = [
+  {icon:"🤲", title:"Bitgebet", text:"Allāhumma innī laka ṣumtu wa ʿalā rizqika aftartu.", ref:"„Für Dich habe ich gefastet – mit Deiner Versorgung breche ich das Fasten.“"},
+  {icon:"🤲", title:"Bitgebet", text:"Rabbanā ātinā fid-dunyā ḥasanah wa fil-ākhirati ḥasanah.", ref:"„Unser Herr, gib uns Gutes im Diesseits und im Jenseits.“"},
+  {icon:"🤲", title:"Bitgebet", text:"Allāhumma innaka ʿafuwwun tuḥibbul-ʿafwa faʿfu ʿannā.", ref:"„Du liebst Vergebung – vergib uns.“"},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, nimm unser Fasten und unsere Gebete an.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, segne unser Iftar und unsere Familien.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, schenke uns Gesundheit, Geduld und Standhaftigkeit.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, fülle unsere Herzen mit Licht und Ruhe.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, erleichtere allen Bedürftigen ihre Lage.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, schenke uns aufrichtige Dankbarkeit.", ref:""},
+  {icon:"🤲", title:"Bitgebet", text:"O Allah, mache unser Ende gut.", ref:""},
+
+  {icon:"✨", title:"Ramadan", text:"Ramadan ist Zeit für Ruhe, Fokus und Herzreinigung.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Die Minuten vor Iftar: Dankbarkeit, Dua, leiser Moment.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Ein kleines Dua kann Großes verändern.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Teile Iftar – teile Segen.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Heute: weniger Eile, mehr Bewusstsein.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Bewahre Ruhe – Ramadan ist ein Trainingsmonat.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Fülle deinen Tag mit guten Absichten.", ref:""},
+  {icon:"✨", title:"Ramadan", text:"Vergebung suchen. Frieden im Herzen halten.", ref:""},
+
+  {icon:"🌙", title:"Erinnerung", text:"Langsam essen, Bismillah sagen, danken.", ref:""},
+  {icon:"🌙", title:"Erinnerung", text:"Sanft sprechen, ruhig bleiben – das ist auch عبادت.", ref:""},
+  {icon:"🌙", title:"Erinnerung", text:"Ein gutes Wort wiegt schwer.", ref:""},
+  {icon:"🌙", title:"Erinnerung", text:"Sadaqa – auch klein – bringt Baraka.", ref:""},
+  {icon:"🌙", title:"Erinnerung", text:"Möge dein Iftar gesegnet sein.", ref:""},
+  {icon:"🌙", title:"Erinnerung", text:"Allahumma barik lana fi rizqina.", ref:"„O Allah, segne uns in unserer Versorgung.“"}
+];
+
 let playedForTarget=null;
 let bgWasPlaying=false;
 
 function bgEl(){ return document.getElementById("bgAudio"); }
 function ezEl(){ return document.getElementById("ezan"); }
 
+/* Erzwingt Endlosschleife auch wenn loop ignoriert wird */
 function forceLoop(){
   const bg = bgEl();
   if(!bg) return;
   bg.loop = true;
-  // Erzwingt Loop auch wenn Browser loop ignoriert
   bg.addEventListener("ended", () => {
     bg.currentTime = 0;
     bg.play().catch(()=>{});
@@ -207,7 +292,7 @@ function startBg(){
   bg.play().catch(()=>{});
 }
 
-// Autoplay-Workaround: 1x tippen irgendwo startet Audio sicher, falls blockiert
+/* Autoplay-Fallback: 1x tippen irgendwo startet Audio sicher, falls blockiert */
 function armTapToStart(){
   const handler = () => {
     startBg();
@@ -251,7 +336,7 @@ function updateCountdown(){
   const diff=targetMs-nowMs;
   document.getElementById("nextIftarText").textContent="Nächster Iftar: "+formatTarget(targetMs);
 
-  // Iftar erreicht -> Background komplett stumm (Pause) -> Ezan -> Background weiter
+  // Iftar erreicht -> Kuran komplett stumm (Pause) -> Ezan lauter -> Kuran weiter
   if(diff<=0){
     if(playedForTarget!==targetMs){
       playedForTarget=targetMs;
@@ -263,7 +348,8 @@ function updateCountdown(){
       if(bgWasPlaying) bg.pause(); // komplett stumm
 
       if(ez){
-        ez.currentTime=0;
+        ez.volume = EZAN_VOL;     // Ezan-Lautstärke hoch
+        ez.currentTime = 0;
         ez.play().catch(()=>{});
 
         ez.onended=()=>{
@@ -280,13 +366,29 @@ function updateCountdown(){
   document.getElementById("s").textContent=String(Math.floor((diff/1000)%60)).padStart(2,"0");
 }
 
-// Start
+/* Rotation (ruhig): alle 60 Sekunden */
+let qIndex = 0;
+function renderQuote(){
+  const q = ROTATING[qIndex % ROTATING.length];
+  document.getElementById("quoteIcon").textContent = q.icon;
+  document.getElementById("quoteTitle").textContent = q.title;
+  document.getElementById("quoteText").textContent = q.text;
+  document.getElementById("quoteRef").textContent = q.ref || "";
+  document.getElementById("quoteCounter").textContent =
+    `${(qIndex % ROTATING.length) + 1} / ${ROTATING.length}`;
+  qIndex++;
+}
+
+/* Start */
 forceLoop();
-startBg();       // klappt wenn Autoplay erlaubt ist
-armTapToStart(); // falls Autoplay blockiert ist, reicht 1x Tippen irgendwo
+startBg();       // Autoplay-Versuch
+armTapToStart(); // Fallback falls Autoplay blockiert
+
+renderQuote();
+setInterval(renderQuote, 60000);
 
 updateCountdown();
-setInterval(updateCountdown,1000);
+setInterval(updateCountdown, 1000);
 </script>
 </body>
 </html>
