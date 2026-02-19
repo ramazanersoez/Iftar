@@ -14,26 +14,18 @@
   --glass:rgba(255,255,255,.08);
   --border:rgba(246,215,139,.22);
 }
-
 *{box-sizing:border-box;}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;
-  color:#fff;
-  background:#000;
-}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;color:#fff;background:#000;}
 
 /* Mehr Bild – ruhig */
 .bg{
   min-height:100vh;
   background-color:#000;
-
   background-image:
     radial-gradient(900px 500px at 18% 12%, rgba(246,215,139,.18), transparent 60%),
     radial-gradient(900px 500px at 85% 20%, rgba(202,162,74,.16), transparent 55%),
     linear-gradient(180deg, rgba(0,0,0,.40), rgba(0,0,0,.72)),
     url("assets/bg.JPG");
-
   background-repeat:no-repeat;
   background-position:center top;
   background-size:115% auto;
@@ -47,7 +39,7 @@ body{
 .wrap{
   width:min(1050px,100%);
   display:grid;
-  grid-template-columns:1.08fr .92fr;
+  grid-template-columns:1fr;
   gap:16px;
 }
 
@@ -96,7 +88,7 @@ h1{
   opacity:.9;
 }
 
-/* PLakette */
+/* Plakette */
 .brand{
   display:inline-flex;
   align-items:center;
@@ -142,55 +134,44 @@ h1{
   text-shadow:0 0 18px rgba(246,215,139,.12);
 }
 
-.label{
-  font-size:12px;
-  opacity:.85;
-}
-
-.next{
-  margin-top:10px;
-  font-size:15px;
-  opacity:.95;
-}
-
-@media (max-width:900px){
-  .wrap{grid-template-columns:1fr;}
-}
+.label{font-size:12px;opacity:.85;}
+.next{margin-top:10px;font-size:15px;opacity:.95;}
 </style>
 </head>
 
 <body>
 <div class="bg">
-<div class="wrap">
+  <div class="wrap">
+    <div class="card">
+      <div class="title">
+        <h1>Iftar Countdown</h1>
+        <div class="loc">Hamburg (IGMG)</div>
+      </div>
 
-<div class="card">
-  <div class="title">
-    <h1>Iftar Countdown</h1>
-    <div class="loc">Hamburg (IGMG)</div>
+      <div class="sub">Ramadan 1447 · Nächster Iftar Countdown</div>
+      <div class="brand">🕌 Mis Tantuni &amp; Yaprak Döner</div>
+
+      <div class="grid">
+        <div class="unit"><span class="val" id="d">00</span><span class="label">Tage</span></div>
+        <div class="unit"><span class="val" id="h">00</span><span class="label">Std</span></div>
+        <div class="unit"><span class="val" id="m">00</span><span class="label">Min</span></div>
+        <div class="unit"><span class="val" id="s">00</span><span class="label">Sek</span></div>
+      </div>
+
+      <div class="next" id="nextIftarText"></div>
+    </div>
   </div>
-
-  <div class="sub">Ramadan 1447 · Nächster Iftar Countdown</div>
-
-  <div class="brand">🕌 Mis Tantuni &amp; Yaprak Döner</div>
-
-  <div class="grid">
-    <div class="unit"><span class="val" id="d">00</span><span class="label">Tage</span></div>
-    <div class="unit"><span class="val" id="h">00</span><span class="label">Std</span></div>
-    <div class="unit"><span class="val" id="m">00</span><span class="label">Min</span></div>
-    <div class="unit"><span class="val" id="s">00</span><span class="label">Sek</span></div>
-  </div>
-
-  <div class="next" id="nextIftarText"></div>
 </div>
 
-</div>
-</div>
-
+<!-- Audio (Dateien in assets/ ablegen) -->
+<audio id="bgAudio" src="assets/Kuran.mp3" preload="auto" loop></audio>
 <audio id="ezan" src="assets/ezan.mp3" preload="auto"></audio>
 
 <script>
 const TZ="Europe/Berlin";
+const BG_VOL = 0.20; // Hintergrundlautstärke (0..1)
 
+// IGMG Hamburg – Ramadan 1447 | 2026 (Iftar/Akşam)
 const IFTAR_TIMES=[
 "2026-02-19T17:44:00","2026-02-20T17:46:00","2026-02-21T17:48:00","2026-02-22T17:50:00",
 "2026-02-23T17:51:00","2026-02-24T17:53:00","2026-02-25T17:55:00","2026-02-26T17:57:00",
@@ -203,52 +184,109 @@ const IFTAR_TIMES=[
 ];
 
 let playedForTarget=null;
+let bgWasPlaying=false;
+
+function bgEl(){ return document.getElementById("bgAudio"); }
+function ezEl(){ return document.getElementById("ezan"); }
+
+function forceLoop(){
+  const bg = bgEl();
+  if(!bg) return;
+  bg.loop = true;
+  // Erzwingt Loop auch wenn Browser loop ignoriert
+  bg.addEventListener("ended", () => {
+    bg.currentTime = 0;
+    bg.play().catch(()=>{});
+  });
+}
+
+function startBg(){
+  const bg = bgEl();
+  if(!bg) return;
+  bg.volume = BG_VOL;
+  bg.play().catch(()=>{});
+}
+
+// Autoplay-Workaround: 1x tippen irgendwo startet Audio sicher, falls blockiert
+function armTapToStart(){
+  const handler = () => {
+    startBg();
+    document.removeEventListener("pointerdown", handler);
+    document.removeEventListener("touchstart", handler);
+  };
+  document.addEventListener("pointerdown", handler, { once:true });
+  document.addEventListener("touchstart", handler, { once:true });
+}
 
 function nowInTZms(timeZone){
-const parts=new Intl.DateTimeFormat("en-GB",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).formatToParts(new Date());
-const get=t=>parts.find(p=>p.type===t).value;
-const iso=`${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
-return new Date(iso).getTime();
+  const parts=new Intl.DateTimeFormat("en-GB",{
+    timeZone,year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+  }).formatToParts(new Date());
+  const get=t=>parts.find(p=>p.type===t).value;
+  const iso=`${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
+  return new Date(iso).getTime();
 }
 
 function findNextTarget(nowMs){
-for(const t of IFTAR_TIMES){
-const ms=new Date(t).getTime();
-if(ms>nowMs)return ms;
-}
-return null;
+  for(const t of IFTAR_TIMES){
+    const ms=new Date(t).getTime();
+    if(ms>nowMs) return ms;
+  }
+  return null;
 }
 
 function formatTarget(targetMs){
-return new Intl.DateTimeFormat("de-DE",{timeZone:TZ,weekday:"short",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(targetMs));
+  return new Intl.DateTimeFormat("de-DE",{
+    timeZone:TZ,weekday:"short",day:"2-digit",month:"2-digit",year:"numeric",
+    hour:"2-digit",minute:"2-digit",hour12:false
+  }).format(new Date(targetMs));
 }
 
 function updateCountdown(){
-const nowMs=nowInTZms(TZ);
-const targetMs=findNextTarget(nowMs);
-if(!targetMs)return;
+  const nowMs=nowInTZms(TZ);
+  const targetMs=findNextTarget(nowMs);
+  if(!targetMs) return;
 
-const diff=targetMs-nowMs;
-document.getElementById("nextIftarText").textContent="Nächster Iftar: "+formatTarget(targetMs);
+  const diff=targetMs-nowMs;
+  document.getElementById("nextIftarText").textContent="Nächster Iftar: "+formatTarget(targetMs);
 
-if(diff<=0){
-if(playedForTarget!==targetMs){
-playedForTarget=targetMs;
-const audio=document.getElementById("ezan");
-if(audio){audio.currentTime=0;audio.play().catch(()=>{});}
-}
-return;
+  // Iftar erreicht -> Background komplett stumm (Pause) -> Ezan -> Background weiter
+  if(diff<=0){
+    if(playedForTarget!==targetMs){
+      playedForTarget=targetMs;
+
+      const bg=bgEl();
+      const ez=ezEl();
+
+      bgWasPlaying = bg && !bg.paused;
+      if(bgWasPlaying) bg.pause(); // komplett stumm
+
+      if(ez){
+        ez.currentTime=0;
+        ez.play().catch(()=>{});
+
+        ez.onended=()=>{
+          if(bg && bgWasPlaying) bg.play().catch(()=>{});
+        };
+      }
+    }
+    return;
+  }
+
+  document.getElementById("d").textContent=Math.floor(diff/(1000*60*60*24));
+  document.getElementById("h").textContent=String(Math.floor((diff/(1000*60*60))%24)).padStart(2,"0");
+  document.getElementById("m").textContent=String(Math.floor((diff/(1000*60))%60)).padStart(2,"0");
+  document.getElementById("s").textContent=String(Math.floor((diff/1000)%60)).padStart(2,"0");
 }
 
-document.getElementById("d").textContent=Math.floor(diff/(1000*60*60*24));
-document.getElementById("h").textContent=String(Math.floor((diff/(1000*60*60))%24)).padStart(2,"0");
-document.getElementById("m").textContent=String(Math.floor((diff/(1000*60))%60)).padStart(2,"0");
-document.getElementById("s").textContent=String(Math.floor((diff/1000)%60)).padStart(2,"0");
-}
+// Start
+forceLoop();
+startBg();       // klappt wenn Autoplay erlaubt ist
+armTapToStart(); // falls Autoplay blockiert ist, reicht 1x Tippen irgendwo
 
 updateCountdown();
 setInterval(updateCountdown,1000);
 </script>
-
 </body>
 </html>
